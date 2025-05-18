@@ -1,6 +1,8 @@
 extends Node
 
 func _ready() -> void:
+	get_tree().set_auto_accept_quit(false)
+	
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	
@@ -18,8 +20,7 @@ func _ready() -> void:
 func _on_peer_connected(id: int) -> void:
 	print("Server: peer connected ", id)
 	if id in Global.connected_players:
-		print("ERR: Cannot connect same ID peer")
-		disconnect_peer(id)
+		Util.disconnect_peer_with_error(id, DomainError.GENERIC_ERROR)
 		return
 	
 	var new_player = DomainPlayer.Player.new()
@@ -41,11 +42,20 @@ func _on_peer_disconnected(id: int) -> void:
 	
 	print("Server: peer disconnected ", id)
 
-func disconnect_peer(id: int) -> void:
-	multiplayer.multiplayer_peer.disconnect_peer(id, true)
-	
-func _exit_tree() -> void:
-	for id in Global.initializing_players:
-		disconnect_peer(id)
-	for id in Global.connected_players:
-		disconnect_peer(id)
+func on_shutdown() -> void:
+	for id in multiplayer.get_peers():
+		Util.disconnect_peer_with_error(id, DomainError.SERVER_SHUTDOWN)
+	#for id in Global.initializing_players:
+		#disconnect_peer(id)
+	#for id in Global.connected_players:
+		#disconnect_peer(id)
+	var seconds := 0
+	while multiplayer.get_peers() and seconds < 5:
+		print(multiplayer.get_peers())
+		await get_tree().create_timer(1).timeout
+		seconds += 1
+
+func _notification(what):
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		on_shutdown()
+		get_tree().quit()
