@@ -1,0 +1,29 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Uma Kart Server"
+run/main_scene="uid://wt2ueprd0gnq"
+config/features=PackedStringArray("4.4", "Forward Plus")
+config/icon="res://old/icon.svg"
+
+[autoload]
+
+Util="*res://Util.gd"
+RPCClient="*res://RPCClient.gd"
+RPCServer="*res://RPCServer.gd"
+UUID="*res://addons/uuid/uuid.gd"
+Global="*res://global.gd"
+
+[debug]
+
+gdscript/warnings/untyped_declaration=1
+gdscript/warnings/inferred_declaration=1

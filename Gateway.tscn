@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wt2ueprd0gnq"]
+
+[ext_resource type="Script" uid="uid://dosjb83p3lucn" path="res://gateway.gd" id="1_bppv1"]
+
+[node name="Gateway" type="Node"]
+script = ExtResource("1_bppv1")

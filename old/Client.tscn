@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3 uid="uid://b11bvt3xs8t8g"]
+
+[ext_resource type="Script" uid="uid://doke0af0dol12" path="res://old/client.gd" id="1_dsyj5"]
+
+[node name="Client" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_dsyj5")
+
+[node name="ConnectButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 68.0
+offset_top = 56.0
+offset_right = 140.0
+offset_bottom = 87.0
+text = "Connect"
+
+[node name="DisconnectButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 221.0
+offset_top = 59.0
+offset_right = 315.0
+offset_bottom = 90.0
+text = "Disconnect"
+
+[node name="RPCButton1" type="Button" parent="."]
+layout_mode = 0
+offset_left = 459.0
+offset_top = 57.0
+offset_right = 553.0
+offset_bottom = 88.0
+text = "RPC1"
+
+[node name="RPCButton2" type="Button" parent="."]
+layout_mode = 0
+offset_left = 626.0
+offset_top = 61.0
+offset_right = 720.0
+offset_bottom = 92.0
+text = "RPC2"
+
+[connection signal="pressed" from="ConnectButton" to="." method="_on_connect_button_pressed"]
+[connection signal="pressed" from="DisconnectButton" to="." method="_on_disconnect_button_pressed"]
+[connection signal="pressed" from="RPCButton1" to="." method="_on_rpc_button_1_pressed"]
+[connection signal="pressed" from="RPCButton2" to="." method="_on_rpc_button_2_pressed"]
