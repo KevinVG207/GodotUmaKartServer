@@ -9,13 +9,7 @@ func _ready() -> void:
 	var peer := ENetMultiplayerPeer.new()
 	peer.create_server(Global.PORT, Global.MAX_CLIENTS)
 	multiplayer.multiplayer_peer = peer
-	print("Server: created")
-	var r1 := DomainRoom.Lobby.new()
-	var r2 := DomainRoom.Race.new()
-	Global.rooms[r1.id] = r1
-	Global.rooms[r2.id] = r2
-	#var r1_data := r1.deserialize()
-	#var r1_copy = DomainRoom.Room.serialize(r1_data)
+	print("Server: started")
 
 func _on_peer_connected(id: int) -> void:
 	print("Server: peer connected ", id)
@@ -38,17 +32,13 @@ func _on_peer_disconnected(id: int) -> void:
 		Global.connected_players.erase(id)
 	
 	if player and player.room_id:
-		Global.rooms[player.room_id].players.erase(player)
+		Matchmaking.leave_room(player)
 	
 	print("Server: peer disconnected ", id)
 
 func on_shutdown() -> void:
 	for id in multiplayer.get_peers():
 		Util.disconnect_peer_with_error(id, DomainError.SERVER_SHUTDOWN)
-	#for id in Global.initializing_players:
-		#disconnect_peer(id)
-	#for id in Global.connected_players:
-		#disconnect_peer(id)
 	var seconds := 0
 	while multiplayer.get_peers() and seconds < 5:
 		print(multiplayer.get_peers())
