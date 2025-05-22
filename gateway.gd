@@ -9,10 +9,10 @@ func _ready() -> void:
 	var peer := ENetMultiplayerPeer.new()
 	peer.create_server(Global.PORT, Global.MAX_CLIENTS)
 	multiplayer.multiplayer_peer = peer
-	print("Server: started")
+	print("Server started")
 
 func _on_peer_connected(id: int) -> void:
-	print("Server: peer connected ", id)
+	print("Peer connected ", id)
 	if id in Global.connected_players:
 		Util.disconnect_peer_with_error(id, DomainError.GENERIC_ERROR)
 		return
@@ -34,7 +34,7 @@ func _on_peer_disconnected(id: int) -> void:
 	if player and player.room_id:
 		Matchmaking.leave_room(player)
 	
-	print("Server: peer disconnected ", id)
+	print("Peer disconnected ", id)
 
 func on_shutdown() -> void:
 	for id in multiplayer.get_peers():

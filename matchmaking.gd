@@ -5,6 +5,10 @@ func register_new_room(room: DomainRoom.Room) -> DomainRoom.Room:
 	Global.rooms[room.id] = room
 	return room
 
+func delete_room(room: DomainRoom.Room) -> void:
+	print("Closing room ", room.id)
+	Global.rooms.erase(room.id)
+
 func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> void:
 	if player.room_id:
 		return
@@ -32,6 +36,8 @@ func leave_room(player: DomainPlayer.Player) -> void:
 	room._on_player_leave_room(player)
 	player.room_id = ""
 	print("Removed player ", player.peer_id, " from room ", room.id)
+	if room.players.size() <= 0:
+		delete_room(room)
 
 func get_joinable_rooms() -> Array[DomainRoom.Room]:
 	var out: Array[DomainRoom.Room] = []
