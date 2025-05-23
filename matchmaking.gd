@@ -21,6 +21,10 @@ func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> v
 	room.players.append(player)
 	room._on_player_join_room(player)
 	print("Added player ", player.peer_id, " to room ", room.id)
+	for room_player in room.players:
+		if room_player.peer_id == player.peer_id:
+			continue
+		RPCClient.player_joined_room.rpc_id(room_player.peer_id, player.deserialize())
 
 func leave_room_by_id(id: int) -> void:
 	if id not in Global.connected_players:
@@ -36,6 +40,10 @@ func leave_room(player: DomainPlayer.Player) -> void:
 	room._on_player_leave_room(player)
 	player.room_id = ""
 	print("Removed player ", player.peer_id, " from room ", room.id)
+	
+	for room_player in room.players:
+		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.deserialize())
+		
 	if room.players.size() <= 0:
 		delete_room(room)
 
