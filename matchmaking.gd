@@ -18,12 +18,13 @@ func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> v
 		return
 	
 	player.room_id = room.id
-	room.players.append(player)
+	room.players[player.peer_id] = player
 	room._on_player_join_room(player)
 	print("Added player ", player.peer_id, " to room ", room.id)
-	for room_player in room.players:
+	for room_player in room.players.values():
 		if room_player.peer_id == player.peer_id:
 			continue
+		print("Signalling new player joined")
 		RPCClient.player_joined_room.rpc_id(room_player.peer_id, player.deserialize())
 
 func leave_room_by_id(id: int) -> void:
@@ -36,12 +37,12 @@ func leave_room(player: DomainPlayer.Player) -> void:
 	if not player.room_id:
 		return
 	var room = Global.rooms[player.room_id]
-	room.players.erase(player)
+	room.players.erase(player.peer_id)
 	room._on_player_leave_room(player)
 	player.room_id = ""
 	print("Removed player ", player.peer_id, " from room ", room.id)
 	
-	for room_player in room.players:
+	for room_player in room.players.values():
 		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.deserialize())
 		
 	if room.players.size() <= 0:

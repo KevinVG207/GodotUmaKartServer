@@ -28,3 +28,9 @@ Matchmaking="*res://matchmaking.gd"
 
 gdscript/warnings/untyped_declaration=1
 gdscript/warnings/inferred_declaration=1
+
+[physics]
+
+common/physics_ticks_per_second=10
+common/max_physics_steps_per_frame=50
+common/physics_jitter_fix=0.0
