@@ -9,6 +9,7 @@ class Player:
 
 	# Server only
 	var room_id: String = ""
+	var ready: bool = false
 	
 	func deserialize() -> Array[Variant]:
 		var list: Array[Variant] = []

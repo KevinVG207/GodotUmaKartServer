@@ -14,9 +14,7 @@ func _physics_process(_delta: float) -> void:
 				var lobby := room as DomainRoom.Lobby
 				lobby.process()
 				lobby._update_joinable()
-				return
 			DomainRoom.RoomType.RACE:
 				var race := room as DomainRoom.Race
 				race.process()
 				race._update_joinable()
-				return

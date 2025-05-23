@@ -39,3 +39,7 @@ func receive_final_lobby(list: Array[Variant]) -> void:
 @rpc("reliable")
 func receive_ping(tick: int) -> void:
 	return
+
+@rpc("reliable")
+func race_start(ticks_to_start: int, tick_rate: int, ping: int) -> void:
+	return

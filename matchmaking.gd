@@ -45,9 +45,9 @@ func leave_room(player: DomainPlayer.Player) -> void:
 	for room_player: DomainPlayer.Player in room.players.values():
 		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.deserialize())
 
-
 func transfer_player(player: DomainPlayer.Player, new_room: DomainRoom.Room) -> void:
 	leave_room(player)
+	player.ready = false
 	add_player_to_room(player, new_room)
 	
 	match new_room.type:

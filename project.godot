@@ -28,6 +28,10 @@ Matchmaking="*res://matchmaking.gd"
 
 gdscript/warnings/untyped_declaration=1
 
+[editor]
+
+run/main_run_args="--headless"
+
 [physics]
 
 common/physics_ticks_per_second=10

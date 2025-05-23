@@ -50,10 +50,14 @@ func send_vote(list: Array[Variant]) -> void:
 @rpc("any_peer", "reliable")
 func send_ping(tick: int) -> void:
 	var id := multiplayer.get_remote_sender_id()
-	if not id in Global.connected_players:
-		return
 	var player := Global.connected_players[id]
 	if not player.room_id or not player.room_id in Global.rooms:
 		return
 	var room := Global.rooms[player.room_id]
 	room.handle_ping(id, tick)
+
+@rpc("any_peer", "reliable")
+func race_send_ready() -> void:
+	var id := multiplayer.get_remote_sender_id()
+	Global.connected_players[id].ready = true
+	print("READY RECEIVED FROM ", id)
