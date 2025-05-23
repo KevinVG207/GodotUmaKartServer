@@ -31,3 +31,11 @@ func player_left_room(list: Array[Variant]) -> void:
 @rpc("reliable")
 func update_lobby(list: Array[Variant]) -> void:
 	return
+
+@rpc("reliable")
+func receive_final_lobby(list: Array[Variant]) -> void:
+	return
+
+@rpc("reliable")
+func receive_ping(tick: int) -> void:
+	return

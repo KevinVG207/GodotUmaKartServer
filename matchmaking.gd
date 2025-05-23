@@ -21,7 +21,7 @@ func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> v
 	room.players[player.peer_id] = player
 	room._on_player_join_room(player)
 	print("Added player ", player.peer_id, " to room ", room.id)
-	for room_player in room.players.values():
+	for room_player: DomainPlayer.Player in room.players.values():
 		if room_player.peer_id == player.peer_id:
 			continue
 		print("Signalling new player joined")
@@ -30,28 +30,38 @@ func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> v
 func leave_room_by_id(id: int) -> void:
 	if id not in Global.connected_players:
 		return
-	var player = Global.connected_players[id]
+	var player := Global.connected_players[id]
 	leave_room(player)
 
 func leave_room(player: DomainPlayer.Player) -> void:
 	if not player.room_id:
 		return
-	var room = Global.rooms[player.room_id]
+	var room := Global.rooms[player.room_id]
 	room.players.erase(player.peer_id)
 	room._on_player_leave_room(player)
 	player.room_id = ""
 	print("Removed player ", player.peer_id, " from room ", room.id)
 	
-	for room_player in room.players.values():
+	for room_player: DomainPlayer.Player in room.players.values():
 		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.deserialize())
-		
-	if room.players.size() <= 0:
-		delete_room(room)
+
+
+func transfer_player(player: DomainPlayer.Player, new_room: DomainRoom.Room) -> void:
+	leave_room(player)
+	add_player_to_room(player, new_room)
+	
+	match new_room.type:
+		DomainRoom.RoomType.LOBBY:
+			var lobby = new_room as DomainRoom.Lobby
+			RPCClient.join_lobby_room.rpc_id(player.peer_id, lobby.deserialize())
+		DomainRoom.RoomType.RACE:
+			var race = new_room as DomainRoom.Race
+			RPCClient.join_race_room.rpc_id(player.peer_id, race.deserialize())
 
 func get_joinable_rooms() -> Array[DomainRoom.Room]:
 	var out: Array[DomainRoom.Room] = []
 	
-	for room in Global.rooms.values():
+	for room: DomainRoom.Room in Global.rooms.values():
 		if room.joinable:
 			out.append(room)
 	return out
@@ -62,7 +72,7 @@ func join_or_create_random_room(id: int) -> DomainRoom.Room:
 	if not id in Global.connected_players:
 		return room
 	
-	var player = Global.connected_players[id]
+	var player := Global.connected_players[id]
 	
 	if player.room_id:
 		Util.disconnect_peer_with_error(id, DomainError.DUPLICATE_USER)
