@@ -43,3 +43,7 @@ func receive_ping(tick: int) -> void:
 @rpc("reliable")
 func race_start(ticks_to_start: int, tick_rate: int, ping: int) -> void:
 	return
+
+@rpc("unreliable_ordered")
+func race_vehicle_state(list: Array[Variant]) -> void:
+	return

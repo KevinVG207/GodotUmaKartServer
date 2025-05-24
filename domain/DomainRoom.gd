@@ -206,6 +206,7 @@ class Race extends Room:
 	var start_timeout: int = 30 * tick_rate
 	var started: bool = false
 	var pings_at_start: Dictionary[int, int] = {}
+	var vehicle_states: Dictionary[int, Dictionary] = {}
 	
 	func _init() -> void:
 		super()

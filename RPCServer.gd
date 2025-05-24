@@ -61,3 +61,19 @@ func race_send_ready() -> void:
 	var id := multiplayer.get_remote_sender_id()
 	Global.connected_players[id].ready = true
 	print("READY RECEIVED FROM ", id)
+
+@rpc("any_peer", "unreliable_ordered")
+func race_vehicle_state(state: Dictionary) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	var player := Global.connected_players[id]
+	if not player.room_id or not player.room_id in Global.rooms:
+		return
+	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	room.vehicle_states[id] = state
+	var wrapper := DomainRace.VehicleDataWrapper.new()
+	wrapper.player = player
+	wrapper.vehicle_state = state
+	for pid in room.players:
+		if pid == id:
+			continue
+		RPCClient.race_vehicle_state.rpc_id(pid, wrapper.serialize())
