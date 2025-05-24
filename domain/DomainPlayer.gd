@@ -11,14 +11,14 @@ class Player:
 	var room_id: String = ""
 	var ready: bool = false
 	
-	func deserialize() -> Array[Variant]:
+	func serialize() -> Array[Variant]:
 		var list: Array[Variant] = []
 		list.append(peer_id)
 		list.append(username)
 		list.append(ping)
 		return list
 
-	static func serialize(list: Array[Variant]) -> Player:
+	static func deserialize(list: Array[Variant]) -> Player:
 		var o := Player.new()
 		o.peer_id = list.pop_front()
 		o.username = list.pop_front()
@@ -28,12 +28,12 @@ class Player:
 class PlayerInitializeData:
 	var username: String
 	
-	func deserialize() -> Array[Variant]:
+	func serialize() -> Array[Variant]:
 		var list: Array[Variant] = []
 		list.append(username)
 		return list
 
-	static func serialize(list: Array[Variant]) -> PlayerInitializeData:
+	static func deserialize(list: Array[Variant]) -> PlayerInitializeData:
 		var o := PlayerInitializeData.new()
 		o.username = list.pop_front()
 		return o

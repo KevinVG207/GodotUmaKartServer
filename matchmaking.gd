@@ -25,7 +25,7 @@ func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> v
 		if room_player.peer_id == player.peer_id:
 			continue
 		print("Signalling new player joined")
-		RPCClient.player_joined_room.rpc_id(room_player.peer_id, player.deserialize())
+		RPCClient.player_joined_room.rpc_id(room_player.peer_id, player.serialize())
 
 func leave_room_by_id(id: int) -> void:
 	if id not in Global.connected_players:
@@ -43,7 +43,7 @@ func leave_room(player: DomainPlayer.Player) -> void:
 	print("Removed player ", player.peer_id, " from room ", room.id)
 	
 	for room_player: DomainPlayer.Player in room.players.values():
-		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.deserialize())
+		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.serialize())
 
 func transfer_player(player: DomainPlayer.Player, new_room: DomainRoom.Room) -> void:
 	leave_room(player)
@@ -53,10 +53,10 @@ func transfer_player(player: DomainPlayer.Player, new_room: DomainRoom.Room) -> 
 	match new_room.type:
 		DomainRoom.RoomType.LOBBY:
 			var lobby = new_room as DomainRoom.Lobby
-			RPCClient.join_lobby_room.rpc_id(player.peer_id, lobby.deserialize())
+			RPCClient.join_lobby_room.rpc_id(player.peer_id, lobby.serialize())
 		DomainRoom.RoomType.RACE:
 			var race = new_room as DomainRoom.Race
-			RPCClient.join_race_room.rpc_id(player.peer_id, race.deserialize())
+			RPCClient.join_race_room.rpc_id(player.peer_id, race.serialize())
 
 func get_joinable_rooms() -> Array[DomainRoom.Room]:
 	var out: Array[DomainRoom.Room] = []

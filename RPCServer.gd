@@ -2,7 +2,7 @@ extends Node
 
 @rpc("any_peer", "reliable")
 func initialize_player(list: Array[Variant]) -> void:
-	var player_data := DomainPlayer.PlayerInitializeData.serialize(list)
+	var player_data := DomainPlayer.PlayerInitializeData.deserialize(list)
 	var id := multiplayer.get_remote_sender_id()
 	
 	var player := Global.initializing_players[id]
@@ -14,14 +14,14 @@ func initialize_player(list: Array[Variant]) -> void:
 	Global.connected_players[id] = player
 	Global.initializing_players.erase(id)
 	print("Initialized player ", id, ": ", player.username)
-	RPCClient.initialize_player.rpc_id(id, player.deserialize())
+	RPCClient.initialize_player.rpc_id(id, player.serialize())
 
 @rpc("any_peer", "reliable")
 func get_rooms() -> void:
 	var out: Array[Array] = []
 	
 	for room: DomainRoom.Room in Global.rooms.values():
-		out.append(room.deserialize())
+		out.append(room.serialize())
 	
 	RPCClient.get_rooms.rpc_id(multiplayer.get_remote_sender_id(), out)
 
@@ -32,15 +32,15 @@ func join_random_room() -> void:
 	match room.type:
 		DomainRoom.RoomType.LOBBY:
 			var lobby = room as DomainRoom.Lobby
-			RPCClient.join_lobby_room.rpc_id(multiplayer.get_remote_sender_id(), lobby.deserialize())
+			RPCClient.join_lobby_room.rpc_id(multiplayer.get_remote_sender_id(), lobby.serialize())
 		DomainRoom.RoomType.RACE:
 			var race = room as DomainRoom.Race
-			RPCClient.join_race_room.rpc_id(multiplayer.get_remote_sender_id(), race.deserialize())
+			RPCClient.join_race_room.rpc_id(multiplayer.get_remote_sender_id(), race.serialize())
 
 @rpc("any_peer", "reliable")
 func send_vote(list: Array[Variant]) -> void:
 	var id := multiplayer.get_remote_sender_id()
-	var data := DomainRoom.VoteData.serialize(list)
+	var data := DomainRoom.VoteData.deserialize(list)
 	var room_id := Global.connected_players[id].room_id
 	if not room_id:
 		return

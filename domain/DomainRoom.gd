@@ -27,7 +27,7 @@ class Room:
 	func _init() -> void:
 		self.id = UUID.v4()
 	
-	func deserialize() -> Array[Variant]:
+	func serialize() -> Array[Variant]:
 		var list: Array[Variant] = []
 		list.append(id)
 		list.append(type)
@@ -35,25 +35,25 @@ class Room:
 		list.append(joinable)
 		var players_dict: Dictionary[int, Array] = {}
 		for pid in players:
-			players_dict[pid] = players[pid].deserialize()
+			players_dict[pid] = players[pid].serialize()
 		list.append(players_dict)
 		list.append(tick)
 		list.append(tick_rate)
 		return list
 	
-	static func serialize(list: Array[Variant]) -> Room:
+	static func deserialize(list: Array[Variant]) -> Room:
 		var o := Room.new()
-		generic_serialize_room(o, list)
+		generic_deserialize_room(o, list)
 		return o
 	
-	static func generic_serialize_room(room: DomainRoom.Room, list: Array[Variant]) -> void:
+	static func generic_deserialize_room(room: DomainRoom.Room, list: Array[Variant]) -> void:
 		room.id = list.pop_front()
 		room.type = list.pop_front()
 		room.max_players = list.pop_front()
 		room.joinable = list.pop_front()
 		var players_dict: Dictionary[int, Array] = list.pop_front()
 		for pid in players_dict:
-			room.players[pid] = DomainPlayer.Player.serialize(players_dict[pid])
+			room.players[pid] = DomainPlayer.Player.deserialize(players_dict[pid])
 		room.tick = list.pop_front()
 		room.tick_rate = list.pop_front()
 	
@@ -121,23 +121,23 @@ class Lobby extends Room:
 		super()
 		self.type = RoomType.LOBBY
 	
-	func deserialize() -> Array[Variant]:
+	func serialize() -> Array[Variant]:
 		var list := super()
 		var tmp_votes: Dictionary[int, Array] = {}
 		for vote_id in votes:
-			tmp_votes[vote_id] = votes[vote_id].deserialize()
+			tmp_votes[vote_id] = votes[vote_id].serialize()
 		list.append(tmp_votes)
 		list.append(voting_timeout)
 		list.append(joining_timeout)
 		list.append(winning_vote)
 		return list
 	
-	static func serialize(list: Array[Variant]) -> Lobby:
+	static func deserialize(list: Array[Variant]) -> Lobby:
 		var lobby := Lobby.new()
-		generic_serialize_room(lobby, list)
+		generic_deserialize_room(lobby, list)
 		var tmp_votes := list.pop_front() as Dictionary[int, Array]
 		for vote_id in tmp_votes:
-			lobby.votes[vote_id] = VoteData.serialize(tmp_votes[vote_id])
+			lobby.votes[vote_id] = VoteData.deserialize(tmp_votes[vote_id])
 		lobby.voting_timeout = list.pop_front()
 		lobby.joining_timeout = list.pop_front()
 		lobby.winning_vote = list.pop_front()
@@ -147,7 +147,7 @@ class Lobby extends Room:
 		super()
 		if tick % tick_rate == 0 and not winning_vote:
 			for pid in players:
-				RPCClient.update_lobby.rpc_id(pid, self.deserialize())
+				RPCClient.update_lobby.rpc_id(pid, self.serialize())
 		
 		if players.size() == 1:
 			voting_timeout = tick + initial_voting_timeout
@@ -170,7 +170,7 @@ class Lobby extends Room:
 		voting_complete = true
 		winning_vote = votes.keys().pick_random()
 		for pid in players:
-			RPCClient.receive_final_lobby.rpc_id(pid, self.deserialize())
+			RPCClient.receive_final_lobby.rpc_id(pid, self.serialize())
 		var race = Race.new()
 		race.course_name = votes[winning_vote].course_name
 		var pids = players.keys()
@@ -186,7 +186,7 @@ class Lobby extends Room:
 		votes[pid] = data
 		print("Player voted: ", pid, " ", data.course_name)
 		for player in players:
-			RPCClient.update_lobby.rpc_id(player, self.deserialize())
+			RPCClient.update_lobby.rpc_id(player, self.serialize())
 	
 	func _update_joinable() -> void:
 		if players.size() >= max_players:
@@ -211,15 +211,15 @@ class Race extends Room:
 		super()
 		self.type = RoomType.RACE
 	
-	func deserialize() -> Array[Variant]:
+	func serialize() -> Array[Variant]:
 		var list := super()
 		list.append(course_name)
 		list.append(starting_order)
 		return list
 	
-	static func serialize(list: Array[Variant]) -> Race:
+	static func deserialize(list: Array[Variant]) -> Race:
 		var race := Race.new()
-		generic_serialize_room(race, list)
+		generic_deserialize_room(race, list)
 		race.course_name = list.pop_front()
 		race.starting_order = list.pop_front()
 		return race
@@ -285,14 +285,14 @@ class VoteData:
 	var character_id: int = 0
 	var vehicle_id: int = 0
 	
-	func deserialize() -> Array[Variant]:
+	func serialize() -> Array[Variant]:
 		var list: Array[Variant] = []
 		list.append(course_name)
 		list.append(character_id)
 		list.append(vehicle_id)
 		return list
 
-	static func serialize(list: Array[Variant]) -> VoteData:
+	static func deserialize(list: Array[Variant]) -> VoteData:
 		var o := VoteData.new()
 		o.course_name = list.pop_front()
 		o.character_id = list.pop_front()
