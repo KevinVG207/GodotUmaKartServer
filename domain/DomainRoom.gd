@@ -264,6 +264,7 @@ class Race extends Room:
 				can_start = false
 				break
 			ping_dict[player.peer_id] = player.ping
+			print("PING ", player.peer_id, " ", player.ping)
 			if player.ping > highest_ping:
 				highest_ping = player.ping
 		
