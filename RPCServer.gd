@@ -69,6 +69,8 @@ func race_vehicle_state(state: Dictionary) -> void:
 	if not player.room_id or not player.room_id in Global.rooms:
 		return
 	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	if not room:
+		return
 	room.vehicle_states[id] = state
 	var wrapper := DomainRace.VehicleDataWrapper.new()
 	wrapper.player = player
@@ -77,3 +79,49 @@ func race_vehicle_state(state: Dictionary) -> void:
 		if pid == id:
 			continue
 		RPCClient.race_vehicle_state.rpc_id(pid, wrapper.serialize())
+
+@rpc("any_peer", "reliable")
+func race_spawn_item(list: Array[Variant]) -> void:
+	var id = multiplayer.get_remote_sender_id()
+	var player := Global.connected_players[id]
+	if not player.room_id or not player.room_id in Global.rooms:
+		return
+	var room := Global.rooms[player.room_id]
+	var dto := DomainRace.ItemSpawnWrapper.deserialize(list)
+	if dto.owner_id != id or dto.origin_id != id:
+		return
+	for player_: DomainPlayer.Player in room.players.values():
+		if player_.peer_id == id:
+			continue
+		RPCClient.race_spawn_item.rpc_id(player_.peer_id, dto.serialize())
+
+@rpc("any_peer", "reliable")
+func race_destroy_item(key: String) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	var player := Global.connected_players[id]
+	if not player.room_id or not player.room_id in Global.rooms:
+		return
+	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	if not room:
+		return
+	for player_: DomainPlayer.Player in room.players.values():
+		if player_.peer_id == id:
+			continue
+		RPCClient.race_destroy_item.rpc_id(player_.peer_id, key)
+
+@rpc("any_peer", "unreliable")
+func race_item_state(list: Array[Variant]) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	var player := Global.connected_players[id]
+	if not player.room_id or not player.room_id in Global.rooms:
+		return
+	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	if not room:
+		return
+	var dto := DomainRace.ItemStateWrapper.deserialize(list)
+	if dto.owner_id != id or dto.origin_id != id:
+		return
+	for player_: DomainPlayer.Player in room.players.values():
+		if player_.peer_id == id:
+			continue
+		RPCClient.race_item_state.rpc_id(player_.peer_id, dto.serialize())

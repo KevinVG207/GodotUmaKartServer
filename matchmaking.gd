@@ -33,7 +33,7 @@ func leave_room_by_id(id: int) -> void:
 	var player := Global.connected_players[id]
 	leave_room(player)
 
-func leave_room(player: DomainPlayer.Player) -> void:
+func leave_room(player: DomainPlayer.Player, is_transfer:=false) -> void:
 	if not player.room_id:
 		return
 	var room := Global.rooms[player.room_id]
@@ -43,10 +43,10 @@ func leave_room(player: DomainPlayer.Player) -> void:
 	print("Removed player ", player.peer_id, " from room ", room.id)
 	
 	for room_player: DomainPlayer.Player in room.players.values():
-		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.serialize())
+		RPCClient.player_left_room.rpc_id(room_player.peer_id, player.serialize(), is_transfer)
 
 func transfer_player(player: DomainPlayer.Player, new_room: DomainRoom.Room) -> void:
-	leave_room(player)
+	leave_room(player, true)
 	player.ready = false
 	add_player_to_room(player, new_room)
 	

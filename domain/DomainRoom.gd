@@ -14,7 +14,7 @@ class Room:
 	var joinable: bool = true
 	var players: Dictionary[int, DomainPlayer.Player] = {}
 	var tick: int = 0
-	var tick_rate: int = 10
+	static var tick_rate: int = 10
 	
 	# Server only
 	class PingData:
@@ -107,9 +107,14 @@ class Room:
 		players[pid].ping = round(avg_ping)
 
 class Lobby extends Room:
+	static var INITIAL_VOTING_TIMEOUT: int = 30 * tick_rate
+	static var INITIAL_JOINING_TIMEOUT: int = 15 * tick_rate
+	static var NEXT_VOTING_TIMEOUT: int = 60 * tick_rate
+	static var NEXT_JOINING_TIMEOUT: int = 45 * tick_rate
+	
 	var votes: Dictionary[int, VoteData]
-	var voting_timeout: int = 30 * tick_rate
-	var joining_timeout: int = 15 * tick_rate
+	var voting_timeout: int = INITIAL_VOTING_TIMEOUT
+	var joining_timeout: int = INITIAL_JOINING_TIMEOUT
 	var winning_vote: int = 0
 	
 	# Server only
@@ -163,6 +168,9 @@ class Lobby extends Room:
 		if tick < joining_timeout:
 			return
 		
+		if players.size() < 1:
+			return
+		
 		for pid in players:
 			if pid not in votes:
 				return
@@ -203,10 +211,14 @@ class Race extends Room:
 	var starting_order: Array[int] = []
 	
 	# Server Only
+	static var FINISH_TIMEOUT = 30 * tick_rate
 	var start_timeout: int = 30 * tick_rate
-	var started: bool = false
+	var started := false
+	var finished := false
 	var pings_at_start: Dictionary[int, int] = {}
 	var vehicle_states: Dictionary[int, Dictionary] = {}
+	var finish_timeout := timeout
+	var one_finished := false
 	
 	func _init() -> void:
 		super()
@@ -227,16 +239,22 @@ class Race extends Room:
 
 	func _update_joinable() -> void:
 		if players.size() >= max_players:
-			joinable = false;
+			joinable = false
 		elif started:
-			joinable = true;
+			joinable = true
+		elif one_finished:
+			joinable = false
+		elif finished:
+			joinable = false
 		else:
-			joinable = false;
+			joinable = false
 
 	func process() -> void:
 		super()
 		check_for_close()
 		check_for_start()
+		check_finished()
+		handle_finished()
 	
 	func check_for_close() -> void:
 		if !started:
@@ -249,6 +267,8 @@ class Race extends Room:
 			return
 		
 		var all_ready = true
+		timeout = 10 * 60 * tick_rate
+		finish_timeout = 6 * 60 * tick_rate
 		for player in players.values():
 			if !player.ready:
 				all_ready = false
@@ -280,6 +300,107 @@ class Race extends Room:
 		
 		for pid in players:
 			RPCClient.race_start.rpc_id(pid, ticks_to_start, tick_rate, ping_dict[pid])
+
+	func check_finished() -> void:
+		if not started:
+			return
+		if finished:
+			return
+		if not vehicle_states:
+			return
+		if players.size() <= 1:
+			finished = true
+			return
+		if tick >= finish_timeout:
+			finished = true
+			return
+		
+		var cur_one_finished = false
+		var unfinished_count := 0
+		for pid in vehicle_states:
+			if not pid in players:
+				continue
+			var state := vehicle_states[pid]
+			if state.finished:
+				cur_one_finished = true
+			else:
+				unfinished_count += 1
+		
+		if cur_one_finished != one_finished:
+			finish_timeout = tick + FINISH_TIMEOUT
+		
+		one_finished = cur_one_finished
+		
+		if unfinished_count < 2:
+			finished = true
+
+	func handle_finished() -> void:
+		if not started:
+			return
+		if not finished:
+			return
+		
+		var finish_order := determine_finish_order()
+		var finish_type := FinishType.NORMAL
+		if tick >= finish_timeout:
+			finish_type = FinishType.TIMEOUT
+		
+		var dto := FinishData.new()
+		dto.finish_order = finish_order
+		dto.type = finish_type
+		
+		var lobby := Lobby.new()
+		lobby.voting_timeout = Lobby.NEXT_VOTING_TIMEOUT
+		lobby.joining_timeout = Lobby.NEXT_JOINING_TIMEOUT
+		Matchmaking.register_new_room(lobby)
+		for player: DomainPlayer.Player in players.values().duplicate(false):
+			RPCClient.race_finished.rpc_id(player.peer_id, dto.serialize())
+			Matchmaking.transfer_player(player, lobby)
+		Matchmaking.delete_room(self)
+		
+	func determine_finish_order() -> Array[int]:
+		var finished_vehicles: Array[int] = []
+		var unfinished_vehicles: Array[int] = []
+		
+		for user_id: int in vehicle_states:
+			if not user_id in players:
+				continue
+			
+			if vehicle_states[user_id].finished:
+				finished_vehicles.append(user_id)
+			else:
+				unfinished_vehicles.append(user_id)
+		
+		finished_vehicles.sort_custom(func(a: int, b: int) -> bool: return vehicle_states[a].finish_time < vehicle_states[b].finish_time)
+		unfinished_vehicles.sort_custom(func(a: int, b: int) -> bool: return get_vehicle_progress(vehicle_states[a]) > get_vehicle_progress(vehicle_states[b]))
+		
+		finished_vehicles += unfinished_vehicles
+		return finished_vehicles
+	
+	static func get_vehicle_progress(state: Dictionary) -> float:
+		return 10000 * state.lap + state.check_idx + state.check_progress
+
+enum FinishType {
+	NORMAL,
+	TIMEOUT
+}
+
+class FinishData:
+	var finish_order: Array[int]
+	var type: FinishType
+	
+	func serialize() -> Array[Variant]:
+		var list: Array[Variant] = []
+		list.append(finish_order)
+		list.append(type)
+		return list
+	
+	static func deserialize(list: Array[Variant]) -> FinishData:
+		var o := FinishData.new()
+		o.finish_order = list.pop_front()
+		o.type = list.pop_front()
+		return o
+
 
 class VoteData:
 	var course_name: String = ""
