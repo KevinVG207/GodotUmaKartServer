@@ -331,7 +331,7 @@ class Race extends Room:
 		
 		one_finished = cur_one_finished
 		
-		if unfinished_count < 2:
+		if unfinished_count < 2 and vehicle_states.size() > 1:
 			finished = true
 
 	func handle_finished() -> void:

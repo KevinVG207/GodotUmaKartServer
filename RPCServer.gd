@@ -45,6 +45,8 @@ func send_vote(list: Array[Variant]) -> void:
 	if not room_id:
 		return
 	var lobby = Global.rooms[room_id] as DomainRoom.Lobby
+	if not lobby:
+		return
 	lobby._on_vote_data(id, data)
 
 @rpc("any_peer", "reliable")
