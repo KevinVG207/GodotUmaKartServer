@@ -1,7 +1,7 @@
 extends Node
 
 func register_new_room(room: DomainRoom.Room) -> DomainRoom.Room:
-	print("Registering new ", DomainRoom.RoomType.find_key(room.type), " room: ", room.id)
+	print("Registering new ", DomainRoom.RoomType.find_key(room.type), " room: ", room.id , " version: ", room.version)
 	Global.rooms[room.id] = room
 	return room
 
@@ -12,6 +12,9 @@ func delete_room(room: DomainRoom.Room) -> void:
 func add_player_to_room(player: DomainPlayer.Player, room: DomainRoom.Room) -> void:
 	if player.room_id:
 		return
+	
+	if room.version != player.version:
+		Util.disconnect_peer_with_error(player.peer_id, DomainError.WRONG_ROOM_VERSION)
 	
 	if !room.joinable or room.players.size() > room.max_players:
 		Util.disconnect_peer_with_error(player.peer_id, DomainError.ROOM_IS_UNJOINABLE)
@@ -58,11 +61,11 @@ func transfer_player(player: DomainPlayer.Player, new_room: DomainRoom.Room) -> 
 			var race = new_room as DomainRoom.Race
 			RPCClient.join_race_room.rpc_id(player.peer_id, race.serialize())
 
-func get_joinable_rooms() -> Array[DomainRoom.Room]:
+func get_joinable_rooms(version: String) -> Array[DomainRoom.Room]:
 	var out: Array[DomainRoom.Room] = []
 	
 	for room: DomainRoom.Room in Global.rooms.values():
-		if room.joinable:
+		if room.joinable and room.version == version:
 			out.append(room)
 	return out
 
@@ -78,12 +81,15 @@ func join_or_create_random_room(id: int) -> DomainRoom.Room:
 		Util.disconnect_peer_with_error(id, DomainError.DUPLICATE_USER)
 		return room
 	
-	var rooms := get_joinable_rooms()
+	var rooms := get_joinable_rooms(player.version)
 	if !rooms.is_empty():
 		room = rooms.pick_random()
 	else:
-		room = register_new_room(DomainRoom.Lobby.new())
+		room = DomainRoom.Lobby.new()
+		room.version = player.version
+		register_new_room(room)
 		room.joinable = true
+		room.version = player.version
 	add_player_to_room(player, room)
 	
 	return room

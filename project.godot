@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Uma Kart Server"
+config/version="1.0.0"
 run/main_scene="uid://wt2ueprd0gnq"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="uid://1hfd7hfsdl0s"

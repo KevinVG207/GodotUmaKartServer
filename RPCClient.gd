@@ -63,3 +63,7 @@ func race_item_state(list: Array[Variant]) -> void:
 @rpc("reliable")
 func race_finished(list: Array[Variant]) -> void:
 	return
+
+@rpc("reliable")
+func race_item_transfer_owner(key: String, new_owner_id: int) -> void:
+	return
