@@ -88,10 +88,14 @@ func race_spawn_item(list: Array[Variant]) -> void:
 	var player := Global.connected_players[id]
 	if not player.room_id or not player.room_id in Global.rooms:
 		return
-	var room := Global.rooms[player.room_id]
+	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	if not room:
+		return
+
 	var dto := DomainRace.ItemSpawnWrapper.deserialize(list)
 	if dto.owner_id != id or dto.origin_id != id:
 		return
+	room.existing_items[dto.key] = dto
 	for player_: DomainPlayer.Player in room.players.values():
 		if player_.peer_id == id:
 			continue
@@ -106,6 +110,12 @@ func race_destroy_item(key: String) -> void:
 	var room := Global.rooms[player.room_id] as DomainRoom.Race
 	if not room:
 		return
+	if not key in room.existing_items:
+		return
+	
+	room.deleted_items[key] = room.existing_items[key]
+	room.existing_items.erase(key)
+
 	for player_: DomainPlayer.Player in room.players.values():
 		if player_.peer_id == id:
 			continue
@@ -123,7 +133,43 @@ func race_item_state(list: Array[Variant]) -> void:
 	var dto := DomainRace.ItemStateWrapper.deserialize(list)
 	if dto.owner_id != id or dto.origin_id != id:
 		return
+	
+	if not dto.key in room.existing_items:
+		return
+	
+	if dto.owner_id != id:
+		return
+	
+	var item := room.existing_items[dto.key]
+	if item.state_idx >= dto.state_idx:
+		return
+
+	item.state = dto.state
+	item.state_idx = dto.state_idx
+
 	for player_: DomainPlayer.Player in room.players.values():
 		if player_.peer_id == id:
 			continue
 		RPCClient.race_item_state.rpc_id(player_.peer_id, dto.serialize())
+
+@rpc("any_peer", "reliable")
+func race_item_transfer_owner(key: String, new_owner_id: int) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	var player := Global.connected_players[id]
+	if not player.room_id or not player.room_id in Global.rooms:
+		return
+	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	if not room:
+		return
+	if not key in room.existing_items:
+		return
+	
+	var item := room.existing_items[key]
+	if item.owner_id != id:
+		return
+	print("TRANSFERRING OWNERSHIP")
+	item.owner_id = new_owner_id
+	for player_: DomainPlayer.Player in room.players.values():
+		# if player_.peer_id == id:
+		# 	continue
+		RPCClient.race_item_transfer_owner.rpc_id(player_.peer_id, key, new_owner_id)

@@ -161,7 +161,7 @@ class Lobby extends Room:
 		
 		determine_winning_vote()
 	
-	func determine_winning_vote():
+	func determine_winning_vote() -> void:
 		if winning_vote:
 			return
 		
@@ -179,13 +179,13 @@ class Lobby extends Room:
 		winning_vote = votes.keys().pick_random()
 		for pid in players:
 			RPCClient.receive_final_lobby.rpc_id(pid, self.serialize())
-		var race = Race.new()
+		var race := Race.new()
 		race.course_name = votes[winning_vote].course_name
-		var pids = players.keys()
+		var pids := players.keys()
 		pids.shuffle()
 		race.starting_order = pids
 		Matchmaking.register_new_room(race)
-		for pid in players.keys().duplicate():
+		for pid: int in players.keys().duplicate():
 			Matchmaking.transfer_player(players[pid], race)
 	
 	func _on_vote_data(pid: int, data: VoteData) -> void:
@@ -211,7 +211,7 @@ class Race extends Room:
 	var starting_order: Array[int] = []
 	
 	# Server Only
-	static var FINISH_TIMEOUT = 30 * tick_rate
+	static var FINISH_TIMEOUT := 30 * tick_rate
 	var start_timeout: int = 30 * tick_rate
 	var started := false
 	var finished := false
@@ -219,6 +219,8 @@ class Race extends Room:
 	var vehicle_states: Dictionary[int, Dictionary] = {}
 	var finish_timeout := timeout
 	var one_finished := false
+	var existing_items: Dictionary[String, DomainRace.ItemSpawnWrapper] = {}
+	var deleted_items: Dictionary[String, DomainRace.ItemStateWrapper] = {}
 	
 	func _init() -> void:
 		super()
@@ -266,7 +268,7 @@ class Race extends Room:
 		if started:
 			return
 		
-		var all_ready = true
+		var all_ready := true
 		timeout = 10 * 60 * tick_rate
 		finish_timeout = 6 * 60 * tick_rate
 		for player in players.values():
@@ -279,7 +281,7 @@ class Race extends Room:
 		
 		var ping_dict: Dictionary[int, int] = {}
 		var highest_ping: int = 0
-		var can_start = true
+		var can_start := true
 		for player in players.values():
 			if ping_data[player.peer_id].last_pings.size() < 5:
 				can_start = false
@@ -295,7 +297,7 @@ class Race extends Room:
 		started = true
 		print("STARTING RACE")
 		
-		var ticks_to_start = ceili(((highest_ping / 1000.0) + 1) * tick_rate)
+		var ticks_to_start := ceili(((highest_ping / 1000.0) + 1) * tick_rate)
 		pings_at_start = ping_dict
 		
 		for pid in players:
@@ -315,7 +317,7 @@ class Race extends Room:
 			finished = true
 			return
 		
-		var cur_one_finished = false
+		var cur_one_finished := false
 		var unfinished_count := 0
 		for pid in vehicle_states:
 			if not pid in players:
