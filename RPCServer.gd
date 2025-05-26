@@ -10,6 +10,7 @@ func initialize_player(list: Array[Variant]) -> void:
 		player = Global.connected_players[id]
 	player.peer_id = id
 	player.username = player_data.username
+	player.version = player_data.version
 	
 	Global.connected_players[id] = player
 	Global.initializing_players.erase(id)

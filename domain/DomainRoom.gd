@@ -23,6 +23,7 @@ class Room:
 		var ongoing_pings: Array[int] = []
 	var ping_data: Dictionary[int, PingData] = {}
 	var timeout: int = 5 * 60 * tick_rate
+	var version: String
 	
 	func _init() -> void:
 		self.id = UUID.v4()
@@ -180,6 +181,7 @@ class Lobby extends Room:
 		for pid in players:
 			RPCClient.receive_final_lobby.rpc_id(pid, self.serialize())
 		var race := Race.new()
+		race.version = version
 		race.course_name = votes[winning_vote].course_name
 		var pids := players.keys()
 		pids.shuffle()
@@ -352,6 +354,7 @@ class Race extends Room:
 		dto.type = finish_type
 		
 		var lobby := Lobby.new()
+		lobby.version = version
 		lobby.voting_timeout = Lobby.NEXT_VOTING_TIMEOUT
 		lobby.joining_timeout = Lobby.NEXT_JOINING_TIMEOUT
 		Matchmaking.register_new_room(lobby)
