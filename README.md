@@ -1,1 +1,1 @@
-Godot game server for GodotUmaKart.
+Godot game server for [GodotUmaKart](https://github.com/KevinVG207/GodotUmaKart).
