@@ -37,7 +37,7 @@ func receive_final_lobby(list: Array[Variant]) -> void:
 	return
 
 @rpc("reliable")
-func receive_ping(tick: int) -> void:
+func receive_ping(tick: int, ping: int) -> void:
 	return
 
 @rpc("reliable")

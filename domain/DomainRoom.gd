@@ -88,7 +88,7 @@ class Room:
 		for pid: int in players:
 			var cur_tick := Time.get_ticks_msec()
 			ping_data[pid].ongoing_pings.append(cur_tick)
-			RPCClient.receive_ping.rpc_id(pid, cur_tick)
+			RPCClient.receive_ping.rpc_id(pid, cur_tick, players[pid].ping)
 	
 	func handle_ping(pid: int, org_tick: int) -> void:
 		if not pid in players:
