@@ -120,7 +120,7 @@ class Lobby extends Room:
 	
 	# Server only
 	var initial_voting_timeout: int = 30 * tick_rate
-	var initial_joining_timeout: int = 5 * tick_rate
+	var initial_joining_timeout: int = 15 * tick_rate
 	var voting_complete := false
 	
 	func _init() -> void:
