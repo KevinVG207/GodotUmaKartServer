@@ -82,6 +82,9 @@ class Room:
 			Matchmaking.delete_room(self)
 		return
 	
+	func is_dev() -> bool:
+		return version.ends_with("-dev")
+	
 	func ping_players() -> void:
 		if tick % floori(tick_rate / 2.0) != 0:
 			return
@@ -110,8 +113,10 @@ class Room:
 class Lobby extends Room:
 	static var INITIAL_VOTING_TIMEOUT: int = 30 * tick_rate
 	static var INITIAL_JOINING_TIMEOUT: int = 15 * tick_rate
+	static var INITIAL_JOINING_TIMEOUT_DEV: int = 5 * tick_rate
 	static var NEXT_VOTING_TIMEOUT: int = 60 * tick_rate
 	static var NEXT_JOINING_TIMEOUT: int = 45 * tick_rate
+	static var NEXT_JOINING_TIMEOUT_DEV: int = INITIAL_JOINING_TIMEOUT_DEV
 	
 	var votes: Dictionary[int, VoteData]
 	var voting_timeout: int = INITIAL_VOTING_TIMEOUT
@@ -119,13 +124,15 @@ class Lobby extends Room:
 	var winning_vote: int = 0
 	
 	# Server only
-	var initial_voting_timeout: int = 30 * tick_rate
-	var initial_joining_timeout: int = 15 * tick_rate
+	var initial_voting_timeout: int = INITIAL_VOTING_TIMEOUT
+	var initial_joining_timeout: int = INITIAL_JOINING_TIMEOUT
 	var voting_complete := false
 	
 	func _init() -> void:
 		super()
 		self.type = RoomType.LOBBY
+		if is_dev():
+			joining_timeout = INITIAL_JOINING_TIMEOUT_DEV
 	
 	func serialize() -> Array[Variant]:
 		var list := super()
@@ -357,6 +364,10 @@ class Race extends Room:
 		lobby.version = version
 		lobby.voting_timeout = Lobby.NEXT_VOTING_TIMEOUT
 		lobby.joining_timeout = Lobby.NEXT_JOINING_TIMEOUT
+		
+		if is_dev():
+			lobby.joining_timeout = Lobby.NEXT_JOINING_TIMEOUT_DEV
+		
 		Matchmaking.register_new_room(lobby)
 		for player: DomainPlayer.Player in players.values().duplicate(false):
 			RPCClient.race_finished.rpc_id(player.peer_id, dto.serialize())
