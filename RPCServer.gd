@@ -174,3 +174,19 @@ func race_item_transfer_owner(key: String, new_owner_id: int) -> void:
 		# if player_.peer_id == id:
 		# 	continue
 		RPCClient.race_item_transfer_owner.rpc_id(player_.peer_id, key, new_owner_id)
+
+@rpc("any_peer", "reliable")
+func race_object_state(object: String, opcode: int, data: Array[Variant]) -> void:
+	print("RECEIVED STAGE OBJECT STATE ", object)
+	var id := multiplayer.get_remote_sender_id()
+	var player := Global.connected_players[id]
+	if not player.room_id or not player.room_id in Global.rooms:
+		return
+	var room := Global.rooms[player.room_id] as DomainRoom.Race
+	if not room:
+		return
+	
+	for player_: DomainPlayer.Player in room.players.values():
+		if player_.peer_id == id:
+			continue
+		RPCClient.race_object_state.rpc_id(player_.peer_id, object, opcode, data)

@@ -131,8 +131,6 @@ class Lobby extends Room:
 	func _init() -> void:
 		super()
 		self.type = RoomType.LOBBY
-		if is_dev():
-			joining_timeout = INITIAL_JOINING_TIMEOUT_DEV
 	
 	func serialize() -> Array[Variant]:
 		var list := super()
@@ -165,6 +163,8 @@ class Lobby extends Room:
 		if players.size() == 1:
 			voting_timeout = tick + initial_voting_timeout
 			joining_timeout = tick + initial_joining_timeout
+			if is_dev():
+				joining_timeout = tick + INITIAL_JOINING_TIMEOUT_DEV
 			timeout = voting_timeout + tick_rate * 60
 		
 		determine_winning_vote()
